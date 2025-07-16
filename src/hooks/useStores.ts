@@ -12,16 +12,21 @@ export const useStores = (userId: string) => {
   const fetchStores = async () => {
     try {
       setLoading(true);
+      console.log('Fetching stores for userId:', userId);
       
       // Check if user has Supabase auth
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
+        console.log('No authenticated user, using demo mode');
         // Demo mode - use localStorage
         const storedStores = localStorage.getItem('demo_stores');
         if (storedStores) {
-          setStores(JSON.parse(storedStores));
+          const stores = JSON.parse(storedStores);
+          console.log('Demo stores loaded:', stores);
+          setStores(stores);
         } else {
+          console.log('No demo stores found, creating default stores');
           // Initialize with demo stores
           const demoStores: Store[] = [
             {
@@ -45,6 +50,7 @@ export const useStores = (userId: string) => {
         return;
       }
 
+      console.log('Authenticated user found, querying database');
       const { data, error } = await supabase
         .from('stores')
         .select('*')
@@ -52,7 +58,12 @@ export const useStores = (userId: string) => {
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database query error:', error);
+        throw error;
+      }
+
+      console.log('Database stores loaded:', data);
 
       const mappedStores: Store[] = data.map(store => ({
         id: store.id,
@@ -77,10 +88,13 @@ export const useStores = (userId: string) => {
 
   const addStore = async (storeData: Omit<Store, 'id' | 'ownerId'>) => {
     try {
+      console.log('Adding store:', storeData);
+      
       // Check if user has Supabase auth
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
+        console.log('Adding store in demo mode');
         // Demo mode - use localStorage
         const newStore: Store = {
           id: `demo-store-${Date.now()}`,
@@ -103,6 +117,7 @@ export const useStores = (userId: string) => {
         return newStore;
       }
 
+      console.log('Adding store to database');
       const { data, error } = await supabase
         .from('stores')
         .insert({
@@ -114,7 +129,12 @@ export const useStores = (userId: string) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database insert error:', error);
+        throw error;
+      }
+
+      console.log('Store added to database:', data);
 
       const newStore: Store = {
         id: data.id,
@@ -144,6 +164,7 @@ export const useStores = (userId: string) => {
   };
 
   useEffect(() => {
+    console.log('useStores useEffect triggered, userId:', userId);
     if (userId) {
       fetchStores();
     }

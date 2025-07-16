@@ -4,6 +4,9 @@ export interface User {
   username: string;
   role: 'admin' | 'business_owner' | 'assistant';
   name: string;
+  businessName?: string;
+  location?: string;
+  phone?: string;
   storeAccess?: string[];
   isActive: boolean;
 }
@@ -25,6 +28,7 @@ export interface Product {
   description: string;
   quantity: number;
   storeId: string;
+  ownerId: string;
   lastUpdated: Date;
 }
 
