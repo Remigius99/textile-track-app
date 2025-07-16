@@ -21,7 +21,7 @@ export interface Product {
   name: string;
   color: string;
   category: string;
-  form: string;
+  form: 'boxes' | 'pcs' | 'dozen' | 'bag' | 'rolls' | 'meters' | 'kg';
   description: string;
   quantity: number;
   storeId: string;

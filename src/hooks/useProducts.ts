@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types/user';
 import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
 
 export const useProducts = (userId: string, storeId?: string) => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -58,7 +58,7 @@ export const useProducts = (userId: string, storeId?: string) => {
           name: productData.name,
           color: productData.color,
           category: productData.category,
-          form: productData.form,
+          form: productData.form as Database['public']['Enums']['product_form'],
           description: productData.description,
           quantity: productData.quantity,
           store_id: productData.storeId,
