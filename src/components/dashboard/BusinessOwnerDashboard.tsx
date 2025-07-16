@@ -1,13 +1,14 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Store, Product } from "@/types/user";
-import { Building, Package, Users, TrendingUp, Plus, FileText } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building, Package, Users, BarChart3, FileText } from "lucide-react";
 import StoreManagement from "@/components/stores/StoreManagement";
 import ProductManagement from "@/components/products/ProductManagement";
 import AssistantManagement from "@/components/assistants/AssistantManagement";
+import { User } from "@/types/user";
+import { useStores } from "@/hooks/useStores";
+import { useProducts } from "@/hooks/useProducts";
 
 interface BusinessOwnerDashboardProps {
   user: User;
@@ -16,85 +17,82 @@ interface BusinessOwnerDashboardProps {
 }
 
 const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwnerDashboardProps) => {
-  // Mock data for demonstration
-  const [stores] = useState<Store[]>([
-    { id: "1", name: "Kariakoo Main Store", location: "Kariakoo, Dar es Salaam", description: "Main retail location", ownerId: user.id },
-    { id: "2", name: "Warehouse A", location: "Industrial Area", description: "Primary storage facility", ownerId: user.id },
-    { id: "3", name: "Warehouse B", location: "Temeke", description: "Secondary storage", ownerId: user.id },
-  ]);
+  const [selectedStoreId, setSelectedStoreId] = useState<string | undefined>();
+  const { stores } = useStores(user.id);
+  const { products } = useProducts(user.id);
 
-  const [products] = useState<Product[]>([
-    { id: "1", name: "Cotton Fabric", color: "Blue", category: "Fabrics", form: "Rolls", description: "High quality cotton", quantity: 150, storeId: "1", lastUpdated: new Date() },
-    { id: "2", name: "Silk Thread", color: "Gold", category: "Threads", form: "Spools", description: "Premium silk thread", quantity: 200, storeId: "1", lastUpdated: new Date() },
-    { id: "3", name: "Buttons", color: "White", category: "Accessories", form: "Packs", description: "Plastic buttons", quantity: 500, storeId: "2", lastUpdated: new Date() },
-  ]);
+  const totalProducts = products.reduce((sum, product) => sum + product.quantity, 0);
+  const lowStockProducts = products.filter(product => product.quantity < 10).length;
 
-  const dashboardStats = {
-    totalStores: stores.length,
-    totalProducts: products.reduce((sum, product) => sum + product.quantity, 0),
-    lowStockItems: products.filter(p => p.quantity < 50).length,
-    activeAssistants: 3
+  const handleViewInventory = (storeId: string) => {
+    setSelectedStoreId(storeId);
+    setActiveTab("products");
   };
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <Building className="w-8 h-8 text-blue-400" />
-              <div>
-                <p className="text-white font-medium">Total Stores</p>
-                <p className="text-2xl font-bold text-white">{dashboardStats.totalStores}</p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-white">Total Stores</CardTitle>
+            <Building className="h-4 w-4 text-blue-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">{stores.length}</div>
+            <p className="text-xs text-blue-200">Active warehouses & stores</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-white">Total Products</CardTitle>
+            <Package className="h-4 w-4 text-blue-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">{totalProducts}</div>
+            <p className="text-xs text-blue-200">Items in inventory</p>
           </CardContent>
         </Card>
 
         <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <Package className="w-8 h-8 text-green-400" />
-              <div>
-                <p className="text-white font-medium">Total Products</p>
-                <p className="text-2xl font-bold text-white">{dashboardStats.totalProducts}</p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-white">Product Types</CardTitle>
+            <BarChart3 className="h-4 w-4 text-blue-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">{products.length}</div>
+            <p className="text-xs text-blue-200">Unique products</p>
           </CardContent>
         </Card>
 
         <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <TrendingUp className="w-8 h-8 text-yellow-400" />
-              <div>
-                <p className="text-white font-medium">Low Stock Items</p>
-                <p className="text-2xl font-bold text-white">{dashboardStats.lowStockItems}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <Users className="w-8 h-8 text-purple-400" />
-              <div>
-                <p className="text-white font-medium">Active Assistants</p>
-                <p className="text-2xl font-bold text-white">{dashboardStats.activeAssistants}</p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-white">Low Stock</CardTitle>
+            <FileText className="h-4 w-4 text-yellow-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">{lowStockProducts}</div>
+            <p className="text-xs text-blue-200">Items need restocking</p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-white/10 border-white/20">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-white/20">Overview</TabsTrigger>
-          <TabsTrigger value="stores" className="data-[state=active]:bg-white/20">Stores</TabsTrigger>
-          <TabsTrigger value="products" className="data-[state=active]:bg-white/20">Products</TabsTrigger>
-          <TabsTrigger value="assistants" className="data-[state=active]:bg-white/20">Assistants</TabsTrigger>
-          <TabsTrigger value="reports" className="data-[state=active]:bg-white/20">Reports</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 bg-white/10 border-white/20">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600">
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="stores" className="data-[state=active]:bg-blue-600">
+            Stores
+          </TabsTrigger>
+          <TabsTrigger value="products" className="data-[state=active]:bg-blue-600">
+            Products
+          </TabsTrigger>
+          <TabsTrigger value="assistants" className="data-[state=active]:bg-blue-600">
+            Assistants
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -102,20 +100,18 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
             <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
                 <CardTitle className="text-white">Recent Activity</CardTitle>
+                <CardDescription className="text-blue-200">
+                  Latest inventory movements
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-blue-200">Cotton Fabric restocked</span>
-                    <span className="text-gray-400">2 hours ago</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white">System initialized</span>
+                    <span className="text-blue-200 text-sm">Just now</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-blue-200">New assistant added</span>
-                    <span className="text-gray-400">1 day ago</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-blue-200">Warehouse B inventory updated</span>
-                    <span className="text-gray-400">2 days ago</span>
+                  <div className="text-blue-200 text-sm">
+                    Start managing your inventory by adding stores and products.
                   </div>
                 </div>
               </CardContent>
@@ -124,66 +120,47 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
             <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader>
                 <CardTitle className="text-white">Quick Actions</CardTitle>
+                <CardDescription className="text-blue-200">
+                  Common tasks
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button className="w-full justify-start bg-blue-600 hover:bg-blue-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add New Product
-                </Button>
-                <Button className="w-full justify-start bg-green-600 hover:bg-green-700">
-                  <Building className="w-4 h-4 mr-2" />
-                  Add New Store
-                </Button>
-                <Button className="w-full justify-start bg-purple-600 hover:bg-purple-700">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Generate Report
-                </Button>
+                <button
+                  onClick={() => setActiveTab("stores")}
+                  className="w-full text-left p-3 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-white transition-colors"
+                >
+                  <Building className="w-4 h-4 inline mr-2" />
+                  Manage Stores
+                </button>
+                <button
+                  onClick={() => setActiveTab("products")}
+                  className="w-full text-left p-3 rounded-lg bg-green-600/20 hover:bg-green-600/30 text-white transition-colors"
+                >
+                  <Package className="w-4 h-4 inline mr-2" />
+                  Manage Products
+                </button>
+                <button
+                  onClick={() => setActiveTab("assistants")}
+                  className="w-full text-left p-3 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-white transition-colors"
+                >
+                  <Users className="w-4 h-4 inline mr-2" />
+                  Manage Assistants
+                </button>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
         <TabsContent value="stores">
-          <StoreManagement stores={stores} />
+          <StoreManagement user={user} onViewInventory={handleViewInventory} />
         </TabsContent>
 
         <TabsContent value="products">
-          <ProductManagement products={products} stores={stores} />
+          <ProductManagement user={user} selectedStoreId={selectedStoreId} />
         </TabsContent>
 
         <TabsContent value="assistants">
-          <AssistantManagement />
-        </TabsContent>
-
-        <TabsContent value="reports" className="space-y-6">
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white">Reports & Analytics</CardTitle>
-              <CardDescription className="text-blue-200">
-                Generate and view business reports
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button className="h-20 flex-col space-y-2 bg-blue-600 hover:bg-blue-700">
-                  <FileText className="w-6 h-6" />
-                  <span>Inventory Report</span>
-                </Button>
-                <Button className="h-20 flex-col space-y-2 bg-green-600 hover:bg-green-700">
-                  <TrendingUp className="w-6 h-6" />
-                  <span>Sales Analytics</span>
-                </Button>
-                <Button className="h-20 flex-col space-y-2 bg-purple-600 hover:bg-purple-700">
-                  <Users className="w-6 h-6" />
-                  <span>Staff Performance</span>
-                </Button>
-                <Button className="h-20 flex-col space-y-2 bg-yellow-600 hover:bg-yellow-700">
-                  <Building className="w-6 h-6" />
-                  <span>Store Summary</span>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <AssistantManagement user={user} />
         </TabsContent>
       </Tabs>
     </div>

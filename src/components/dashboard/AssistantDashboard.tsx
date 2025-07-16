@@ -1,11 +1,12 @@
 
 import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Product } from "@/types/user";
-import { Package, Search, Activity, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Package, Activity, Search, Minus, Eye } from "lucide-react";
+import { User } from "@/types/user";
 
 interface AssistantDashboardProps {
   user: User;
@@ -15,189 +16,282 @@ interface AssistantDashboardProps {
 
 const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboardProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  
-  // Mock data for demonstration
-  const [products] = useState<Product[]>([
-    { id: "1", name: "Cotton Fabric", color: "Blue", category: "Fabrics", form: "Rolls", description: "High quality cotton", quantity: 150, storeId: "1", lastUpdated: new Date() },
-    { id: "2", name: "Silk Thread", color: "Gold", category: "Threads", form: "Spools", description: "Premium silk thread", quantity: 200, storeId: "1", lastUpdated: new Date() },
-    { id: "3", name: "Buttons", color: "White", category: "Accessories", form: "Packs", description: "Plastic buttons", quantity: 500, storeId: "2", lastUpdated: new Date() },
+
+  // Mock data for demonstration - in real app, this would come from the database
+  const [products] = useState([
+    {
+      id: "1",
+      name: "Silk Fabric",
+      color: "Black",
+      category: "Cotton",
+      form: "meters",
+      quantity: 150,
+      storeId: "store1",
+      storeName: "Store A at NMB Branch"
+    },
+    {
+      id: "2",
+      name: "Canvas Material",
+      color: "White",
+      category: "Canvas",
+      form: "boxes",
+      quantity: 25,
+      storeId: "store1",
+      storeName: "Store A at NMB Branch"
+    },
+    {
+      id: "3",
+      name: "Tetron Fabric",
+      color: "Blue",
+      category: "Synthetic",
+      form: "rolls",
+      quantity: 75,
+      storeId: "store2",
+      storeName: "Store B at Msimbazi"
+    }
   ]);
 
-  const recentActivities = [
-    { id: "1", action: "Removed 5 units of Cotton Fabric", timestamp: new Date(Date.now() - 3600000) },
-    { id: "2", action: "Checked inventory for Silk Thread", timestamp: new Date(Date.now() - 7200000) },
-    { id: "3", action: "Updated Button stock count", timestamp: new Date(Date.now() - 10800000) },
-  ];
+  const [activities] = useState([
+    {
+      id: "1",
+      action: "Product removed",
+      productName: "Silk Fabric",
+      quantity: 10,
+      timestamp: new Date(Date.now() - 3600000),
+      storeName: "Store A at NMB Branch"
+    },
+    {
+      id: "2",
+      action: "Product removed",
+      productName: "Canvas Material",
+      quantity: 5,
+      timestamp: new Date(Date.now() - 7200000),
+      storeName: "Store A at NMB Branch"
+    }
+  ]);
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.color.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.color.toLowerCase().includes(searchTerm.toLowerCase())
+    product.storeName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleRemoveProduct = (productId: string, quantity: number) => {
-    console.log(`Removing ${quantity} units from product ${productId}`);
-    // In a real app, this would update the database
+    console.log(`Removing ${quantity} of product ${productId}`);
+    // In real implementation, this would update the database
   };
 
   return (
     <div className="space-y-6">
+      {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <Package className="w-8 h-8 text-blue-400" />
-              <div>
-                <p className="text-white font-medium">Available Products</p>
-                <p className="text-2xl font-bold text-white">{products.length}</p>
-              </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-white">Available Products</CardTitle>
+            <Package className="h-4 w-4 text-blue-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">{products.length}</div>
+            <p className="text-xs text-blue-200">Products you can manage</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-white">Today's Activity</CardTitle>
+            <Activity className="h-4 w-4 text-green-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">
+              {activities.filter(a => 
+                new Date(a.timestamp).toDateString() === new Date().toDateString()
+              ).length}
             </div>
+            <p className="text-xs text-blue-200">Actions performed today</p>
           </CardContent>
         </Card>
 
         <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <Activity className="w-8 h-8 text-green-400" />
-              <div>
-                <p className="text-white font-medium">Today's Actions</p>
-                <p className="text-2xl font-bold text-white">{recentActivities.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <Eye className="w-8 h-8 text-purple-400" />
-              <div>
-                <p className="text-white font-medium">Access Level</p>
-                <p className="text-lg font-bold text-white">View & Remove</p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-white">Access Status</CardTitle>
+            <Eye className="h-4 w-4 text-green-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-400">Active</div>
+            <p className="text-xs text-blue-200">Full access granted</p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-white/10 border-white/20">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-white/20">Overview</TabsTrigger>
-          <TabsTrigger value="products" className="data-[state=active]:bg-white/20">Products</TabsTrigger>
-          <TabsTrigger value="activity" className="data-[state=active]:bg-white/20">My Activity</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-white/10 border-white/20">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600">
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="products" className="data-[state=active]:bg-blue-600">
+            Products
+          </TabsTrigger>
+          <TabsTrigger value="activity" className="data-[state=active]:bg-blue-600">
+            My Activity
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white">Welcome, {user.name}</CardTitle>
-              <CardDescription className="text-blue-200">
-                Your assistant dashboard for inventory management
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-white">
-                  As a store assistant, you can view product availability and remove items from inventory. 
-                  All your actions are logged for transparency and accountability.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-white/5 rounded-lg">
-                    <h3 className="text-white font-medium mb-2">Your Permissions</h3>
-                    <ul className="text-blue-200 text-sm space-y-1">
-                      <li>• View product inventory</li>
-                      <li>• Remove products from stock</li>
-                      <li>• Search and filter products</li>
-                      <li>• View activity logs (read-only)</li>
-                    </ul>
-                  </div>
-                  <div className="p-4 bg-white/5 rounded-lg">
-                    <h3 className="text-white font-medium mb-2">Quick Stats</h3>
-                    <ul className="text-blue-200 text-sm space-y-1">
-                      <li>• {products.length} products available</li>
-                      <li>• {recentActivities.length} actions today</li>
-                      <li>• Access to {user.storeAccess?.length || 0} stores</li>
-                    </ul>
-                  </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white">Recent Activity</CardTitle>
+                <CardDescription className="text-blue-200">
+                  Your latest actions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {activities.slice(0, 3).map((activity) => (
+                    <div key={activity.id} className="flex items-center justify-between">
+                      <div>
+                        <span className="text-white">{activity.action}</span>
+                        <p className="text-blue-200 text-sm">
+                          {activity.productName} ({activity.quantity} units)
+                        </p>
+                      </div>
+                      <span className="text-blue-200 text-sm">
+                        {activity.timestamp.toLocaleTimeString()}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white">Quick Actions</CardTitle>
+                <CardDescription className="text-blue-200">
+                  Common tasks
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <button
+                  onClick={() => setActiveTab("products")}
+                  className="w-full text-left p-3 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-white transition-colors"
+                >
+                  <Package className="w-4 h-4 inline mr-2" />
+                  View & Manage Products
+                </button>
+                <button
+                  onClick={() => setActiveTab("activity")}
+                  className="w-full text-left p-3 rounded-lg bg-green-600/20 hover:bg-green-600/30 text-white transition-colors"
+                >
+                  <Activity className="w-4 h-4 inline mr-2" />
+                  View My Activity Log
+                </button>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
-        <TabsContent value="products" className="space-y-6">
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white">Product Inventory</CardTitle>
-              <CardDescription className="text-blue-200">
-                View and manage product availability
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Search className="w-5 h-5 text-gray-400" />
+        <TabsContent value="products">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-semibold text-white">Available Products</h3>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 w-4 h-4" />
                 <Input
-                  placeholder="Search products by name, category, or color..."
+                  placeholder="Search products..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50"
                 />
               </div>
+            </div>
 
-              <div className="grid gap-4">
-                {filteredProducts.map((product) => (
-                  <div key={product.id} className="p-4 bg-white/5 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredProducts.map((product) => (
+                <Card key={product.id} className="bg-white/10 backdrop-blur-sm border-white/20">
+                  <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-white font-medium">{product.name}</h3>
-                        <div className="text-blue-200 text-sm space-y-1">
-                          <p>Color: {product.color} | Category: {product.category}</p>
-                          <p>Form: {product.form} | Quantity: {product.quantity}</p>
-                          <p>{product.description}</p>
-                        </div>
+                      <CardTitle className="text-white text-lg">{product.name}</CardTitle>
+                      <Badge variant={product.quantity > 10 ? "default" : "destructive"}>
+                        {product.quantity} {product.form}
+                      </Badge>
+                    </div>
+                    <CardDescription className="text-blue-200">
+                      {product.storeName}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-blue-300">Color:</span>
+                        <p className="text-white">{product.color}</p>
                       </div>
+                      <div>
+                        <span className="text-blue-300">Category:</span>
+                        <p className="text-white">{product.category}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                      <span className="text-white font-medium">
+                        Remove quantity:
+                      </span>
                       <div className="flex items-center space-x-2">
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          product.quantity > 100 ? 'bg-green-600 text-white' :
-                          product.quantity > 50 ? 'bg-yellow-600 text-white' :
-                          'bg-red-600 text-white'
-                        }`}>
-                          {product.quantity > 100 ? 'In Stock' :
-                           product.quantity > 50 ? 'Low Stock' : 'Very Low'}
-                        </span>
                         <Button
                           size="sm"
-                          variant="destructive"
+                          className="bg-red-600 hover:bg-red-700"
                           onClick={() => handleRemoveProduct(product.id, 1)}
+                          disabled={product.quantity === 0}
                         >
-                          Remove
+                          <Minus className="w-3 h-3 mr-1" />
+                          Remove 1
                         </Button>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </TabsContent>
 
-        <TabsContent value="activity" className="space-y-6">
+        <TabsContent value="activity">
           <Card className="bg-white/10 backdrop-blur-sm border-white/20">
             <CardHeader>
               <CardTitle className="text-white">My Activity Log</CardTitle>
               <CardDescription className="text-blue-200">
-                View your recent actions and activities
+                View your daily, weekly, monthly, and yearly activities (Read-only)
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {recentActivities.map((activity) => (
-                  <div key={activity.id} className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                    <span className="text-white">{activity.action}</span>
-                    <span className="text-blue-200 text-sm">
-                      {activity.timestamp.toLocaleTimeString()}
-                    </span>
-                  </div>
+              <div className="space-y-4">
+                {activities.map((activity) => (
+                  <Card key={activity.id} className="bg-white/5 border-white/10">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="outline" className="text-blue-300 border-blue-300">
+                              {activity.action}
+                            </Badge>
+                          </div>
+                          <p className="text-white font-medium">{activity.productName}</p>
+                          <p className="text-blue-200 text-sm">
+                            Quantity: {activity.quantity} units | Store: {activity.storeName}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-blue-200 text-sm">
+                            {activity.timestamp.toLocaleDateString()}
+                          </p>
+                          <p className="text-blue-300 text-xs">
+                            {activity.timestamp.toLocaleTimeString()}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </CardContent>

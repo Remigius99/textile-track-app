@@ -14,7 +14,302 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activity_logs: {
+        Row: {
+          action: string
+          details: Json | null
+          id: string
+          new_quantity: number | null
+          previous_quantity: number | null
+          product_id: string | null
+          quantity_change: number | null
+          store_id: string | null
+          timestamp: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          details?: Json | null
+          id?: string
+          new_quantity?: number | null
+          previous_quantity?: number | null
+          product_id?: string | null
+          quantity_change?: number | null
+          store_id?: string | null
+          timestamp?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          details?: Json | null
+          id?: string
+          new_quantity?: number | null
+          previous_quantity?: number | null
+          product_id?: string | null
+          quantity_change?: number | null
+          store_id?: string | null
+          timestamp?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assistants: {
+        Row: {
+          assistant_id: string
+          business_owner_id: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          is_muted: boolean | null
+          store_access: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          assistant_id: string
+          business_owner_id: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_muted?: boolean | null
+          store_access?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          assistant_id?: string
+          business_owner_id?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_muted?: boolean | null
+          store_access?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistants_assistant_id_fkey"
+            columns: ["assistant_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistants_business_owner_id_fkey"
+            columns: ["business_owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_registrations: {
+        Row: {
+          business_name: string
+          created_at: string | null
+          description: string | null
+          email: string
+          id: string
+          location: string | null
+          owner_name: string
+          phone: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+        }
+        Insert: {
+          business_name: string
+          created_at?: string | null
+          description?: string | null
+          email: string
+          id?: string
+          location?: string | null
+          owner_name: string
+          phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+        }
+        Update: {
+          business_name?: string
+          created_at?: string | null
+          description?: string | null
+          email?: string
+          id?: string
+          location?: string | null
+          owner_name?: string
+          phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_registrations_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: string
+          color: string
+          created_at: string | null
+          description: string | null
+          form: Database["public"]["Enums"]["product_form"]
+          id: string
+          name: string
+          owner_id: string
+          quantity: number
+          store_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          color: string
+          created_at?: string | null
+          description?: string | null
+          form: Database["public"]["Enums"]["product_form"]
+          id?: string
+          name: string
+          owner_id: string
+          quantity?: number
+          store_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          color?: string
+          created_at?: string | null
+          description?: string | null
+          form?: Database["public"]["Enums"]["product_form"]
+          id?: string
+          name?: string
+          owner_id?: string
+          quantity?: number
+          store_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stores: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          location: string
+          name: string
+          owner_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          location: string
+          name: string
+          owner_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          location?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stores_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          business_name: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          location: string | null
+          name: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string | null
+          username: string
+        }
+        Insert: {
+          business_name?: string | null
+          created_at?: string | null
+          id: string
+          is_active?: boolean | null
+          location?: string | null
+          name: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+          username: string
+        }
+        Update: {
+          business_name?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          name?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +318,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      product_form:
+        | "boxes"
+        | "pcs"
+        | "dozen"
+        | "bag"
+        | "rolls"
+        | "meters"
+        | "kg"
+      user_role: "admin" | "business_owner" | "assistant"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +453,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      product_form: ["boxes", "pcs", "dozen", "bag", "rolls", "meters", "kg"],
+      user_role: ["admin", "business_owner", "assistant"],
+    },
   },
 } as const
