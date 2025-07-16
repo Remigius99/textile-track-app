@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types/user';
@@ -12,6 +13,23 @@ export const useProducts = (userId: string, storeId?: string) => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
+      
+      // Check if user has Supabase auth
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Demo mode - use localStorage
+        const storedProducts = localStorage.getItem('demo_products');
+        if (storedProducts) {
+          const allProducts = JSON.parse(storedProducts);
+          const filteredProducts = storeId 
+            ? allProducts.filter((p: Product) => p.storeId === storeId)
+            : allProducts.filter((p: Product) => p.ownerId === userId);
+          setProducts(filteredProducts);
+        }
+        return;
+      }
+
       let query = supabase
         .from('products')
         .select('*')
@@ -34,6 +52,7 @@ export const useProducts = (userId: string, storeId?: string) => {
         description: product.description || '',
         quantity: product.quantity,
         storeId: product.store_id,
+        ownerId: product.owner_id,
         lastUpdated: new Date(product.updated_at)
       }));
 
@@ -52,6 +71,32 @@ export const useProducts = (userId: string, storeId?: string) => {
 
   const addProduct = async (productData: Omit<Product, 'id' | 'lastUpdated'>) => {
     try {
+      // Check if user has Supabase auth
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Demo mode - use localStorage
+        const newProduct: Product = {
+          id: `demo-product-${Date.now()}`,
+          ...productData,
+          lastUpdated: new Date()
+        };
+
+        const storedProducts = localStorage.getItem('demo_products');
+        const allProducts = storedProducts ? JSON.parse(storedProducts) : [];
+        allProducts.push(newProduct);
+        localStorage.setItem('demo_products', JSON.stringify(allProducts));
+        
+        setProducts(prev => [newProduct, ...prev]);
+        
+        toast({
+          title: "Success",
+          description: "Product added successfully (Demo Mode)",
+        });
+
+        return newProduct;
+      }
+
       const { data, error } = await supabase
         .from('products')
         .insert({
@@ -78,6 +123,7 @@ export const useProducts = (userId: string, storeId?: string) => {
         description: data.description || '',
         quantity: data.quantity,
         storeId: data.store_id,
+        ownerId: data.owner_id,
         lastUpdated: new Date(data.updated_at)
       };
 
@@ -102,6 +148,35 @@ export const useProducts = (userId: string, storeId?: string) => {
 
   const updateProductQuantity = async (productId: string, newQuantity: number) => {
     try {
+      // Check if user has Supabase auth
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Demo mode - use localStorage
+        const storedProducts = localStorage.getItem('demo_products');
+        if (storedProducts) {
+          const allProducts = JSON.parse(storedProducts);
+          const updatedProducts = allProducts.map((p: Product) => 
+            p.id === productId 
+              ? { ...p, quantity: newQuantity, lastUpdated: new Date() }
+              : p
+          );
+          localStorage.setItem('demo_products', JSON.stringify(updatedProducts));
+          
+          setProducts(prev => prev.map(product => 
+            product.id === productId 
+              ? { ...product, quantity: newQuantity, lastUpdated: new Date() }
+              : product
+          ));
+
+          toast({
+            title: "Success",
+            description: "Product quantity updated (Demo Mode)",
+          });
+        }
+        return;
+      }
+
       const { data, error } = await supabase
         .from('products')
         .update({ quantity: newQuantity })

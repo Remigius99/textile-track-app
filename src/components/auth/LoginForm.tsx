@@ -1,66 +1,139 @@
 
-import { useState } from "react";
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, LogIn } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { User } from "@/types/user";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from '@/integrations/supabase/client';
+import { User } from '@/types/user';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, UserCheck } from 'lucide-react';
 
 interface LoginFormProps {
   onLogin: (user: User) => void;
 }
 
 const LoginForm = ({ onLogin }: LoginFormProps) => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"admin" | "business_owner" | "assistant">("business_owner");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleDemoLogin = () => {
+    const demoUser: User = {
+      id: "demo-user-123",
+      username: username || "demo_user",
+      name: username || "Demo User",
+      role,
+      businessName: role === 'business_owner' ? "Mubusi Textile Company" : undefined,
+      location: "Dar es Salaam, Tanzania",
+      phone: "+255123456789",
+      isActive: true
+    };
 
+    toast({
+      title: "Demo Login Successful",
+      description: `Logged in as ${role.replace('_', ' ')}`,
+    });
+
+    onLogin(demoUser);
+  };
+
+  const handleSupabaseLogin = async () => {
+    if (!username || !password) {
+      toast({
+        title: "Error",
+        description: "Please enter both username and password",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
     try {
+      // For this demo, we'll use email format: username@textile.com
+      const email = username.includes('@') ? username : `${username}@textile.com`;
+      
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        // If login fails, try to sign up the user
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              username,
+              name: username,
+              role
+            }
+          }
+        });
 
-      if (authData.user) {
-        // Fetch user profile data
-        const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", authData.user.id)
+        if (signUpError) throw signUpError;
+
+        if (signUpData.user) {
+          // Create user profile
+          const { error: profileError } = await supabase
+            .from('users')
+            .upsert({
+              id: signUpData.user.id,
+              username,
+              name: username,
+              role,
+              business_name: role === 'business_owner' ? "Mubusi Textile Company" : null,
+              location: "Dar es Salaam, Tanzania",
+              phone: "+255123456789"
+            });
+
+          if (profileError) {
+            console.error('Profile creation error:', profileError);
+          }
+
+          toast({
+            title: "Account Created",
+            description: "New account created and logged in successfully",
+          });
+        }
+      }
+
+      // Get user profile
+      const currentUser = authData?.user || signUpData?.user;
+      if (currentUser) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', currentUser.id)
           .single();
 
-        if (userError) throw userError;
-
         const user: User = {
-          id: userData.id,
-          username: userData.username,
-          role: userData.role,
-          name: userData.name,
-          isActive: userData.is_active,
-          storeAccess: []
+          id: currentUser.id,
+          username: profile?.username || username,
+          name: profile?.name || username,
+          role: profile?.role || role,
+          businessName: profile?.business_name,
+          location: profile?.location,
+          phone: profile?.phone,
+          isActive: profile?.is_active ?? true
         };
 
-        onLogin(user);
         toast({
           title: "Login Successful",
-          description: `Welcome back, ${userData.name}!`,
+          description: `Welcome back, ${user.name}!`,
         });
+
+        onLogin(user);
       }
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error('Login error:', error);
       toast({
         title: "Login Failed",
-        description: error.message || "Invalid credentials. Please try again.",
+        description: error.message || "Invalid credentials",
         variant: "destructive",
       });
     } finally {
@@ -68,103 +141,114 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     }
   };
 
-  const handleDemoLogin = (role: 'admin' | 'business_owner' | 'assistant') => {
-    // Demo login for testing
-    const demoUser: User = {
-      id: `demo-${role}`,
-      username: `demo_${role}`,
-      role,
-      name: role === 'admin' ? 'System Admin' : 
-            role === 'business_owner' ? 'John Mubusi' : 
-            'Store Assistant',
-      isActive: true,
-      storeAccess: role === 'assistant' ? ['store1', 'store2'] : undefined
-    };
-    onLogin(demoUser);
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-white/10 backdrop-blur-sm border-white/20">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <Building2 className="w-12 h-12 text-blue-400" />
-          </div>
-          <CardTitle className="text-2xl text-white">Mubusi Textile</CardTitle>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+      <Card className="w-full max-w-md bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
+        <CardHeader className="text-center space-y-2">
+          <CardTitle className="text-2xl font-bold text-white">
+            Mubusi Textile System
+          </CardTitle>
           <CardDescription className="text-blue-200">
-            Inventory Management System
+            Inventory Control & Monitoring System
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
             <div>
-              <Label htmlFor="email" className="text-white">Email</Label>
+              <Label htmlFor="username" className="text-white text-sm font-medium">
+                Username
+              </Label>
               <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                placeholder="Enter your email"
-                required
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-blue-400 focus:ring-blue-400"
+                placeholder="Enter your username"
+                disabled={loading}
               />
             </div>
+            
             <div>
-              <Label htmlFor="password" className="text-white">Password</Label>
+              <Label htmlFor="password" className="text-white text-sm font-medium">
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-blue-400 focus:ring-blue-400"
                 placeholder="Enter your password"
-                required
+                disabled={loading}
               />
             </div>
-            <Button 
-              type="submit" 
-              className="w-full bg-blue-600 hover:bg-blue-700"
+
+            <div>
+              <Label htmlFor="role" className="text-white text-sm font-medium">
+                Role
+              </Label>
+              <Select value={role} onValueChange={(value: any) => setRole(value)} disabled={loading}>
+                <SelectTrigger className="mt-1 bg-white/10 border-white/20 text-white focus:border-blue-400 focus:ring-blue-400">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-600">
+                  <SelectItem value="admin" className="text-white hover:bg-slate-700">
+                    System Administrator
+                  </SelectItem>
+                  <SelectItem value="business_owner" className="text-white hover:bg-slate-700">
+                    Business Owner
+                  </SelectItem>
+                  <SelectItem value="assistant" className="text-white hover:bg-slate-700">
+                    Assistant
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Button
+              onClick={handleSupabaseLogin}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 transition-colors"
               disabled={loading}
             >
               {loading ? (
-                "Signing in..."
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing In...
+                </>
               ) : (
                 <>
-                  <LogIn className="w-4 h-4 mr-2" />
+                  <UserCheck className="mr-2 h-4 w-4" />
                   Sign In
                 </>
               )}
             </Button>
-          </form>
-          
-          <div className="mt-6 pt-6 border-t border-white/20">
-            <p className="text-sm text-blue-200 text-center mb-3">Demo Login (for testing):</p>
-            <div className="space-y-2">
-              <Button 
-                onClick={() => handleDemoLogin('admin')}
-                variant="outline" 
-                className="w-full bg-white/5 border-white/20 text-white hover:bg-white/10"
-                size="sm"
-              >
-                Login as Admin
-              </Button>
-              <Button 
-                onClick={() => handleDemoLogin('business_owner')}
-                variant="outline" 
-                className="w-full bg-white/5 border-white/20 text-white hover:bg-white/10"
-                size="sm"
-              >
-                Login as Business Owner
-              </Button>
-              <Button 
-                onClick={() => handleDemoLogin('assistant')}
-                variant="outline" 
-                className="w-full bg-white/5 border-white/20 text-white hover:bg-white/10"
-                size="sm"
-              >
-                Login as Assistant
-              </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-white/20" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-slate-900 px-2 text-white/60">Or</span>
+              </div>
             </div>
+
+            <Button
+              onClick={handleDemoLogin}
+              variant="outline"
+              className="w-full border-white/20 text-white hover:bg-white/10 transition-colors"
+              disabled={loading}
+            >
+              Demo Login (No Password Required)
+            </Button>
+          </div>
+
+          <div className="text-center">
+            <p className="text-xs text-blue-200">
+              For demo: Use any username and role selection
+            </p>
           </div>
         </CardContent>
       </Card>

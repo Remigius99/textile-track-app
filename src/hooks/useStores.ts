@@ -12,6 +12,39 @@ export const useStores = (userId: string) => {
   const fetchStores = async () => {
     try {
       setLoading(true);
+      
+      // Check if user has Supabase auth
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Demo mode - use localStorage
+        const storedStores = localStorage.getItem('demo_stores');
+        if (storedStores) {
+          setStores(JSON.parse(storedStores));
+        } else {
+          // Initialize with demo stores
+          const demoStores: Store[] = [
+            {
+              id: 'demo-store-1',
+              name: 'Store A - NMB Branch',
+              location: 'Near NMB Bank, Kariakoo',
+              description: 'Main textile store with premium fabrics',
+              ownerId: userId
+            },
+            {
+              id: 'demo-store-2', 
+              name: 'Store B - Msimbazi',
+              location: 'Msimbazi Street, Kariakoo',
+              description: 'Cotton and silk specialty store',
+              ownerId: userId
+            }
+          ];
+          localStorage.setItem('demo_stores', JSON.stringify(demoStores));
+          setStores(demoStores);
+        }
+        return;
+      }
+
       const { data, error } = await supabase
         .from('stores')
         .select('*')
@@ -44,6 +77,32 @@ export const useStores = (userId: string) => {
 
   const addStore = async (storeData: Omit<Store, 'id' | 'ownerId'>) => {
     try {
+      // Check if user has Supabase auth
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Demo mode - use localStorage
+        const newStore: Store = {
+          id: `demo-store-${Date.now()}`,
+          ...storeData,
+          ownerId: userId
+        };
+
+        const storedStores = localStorage.getItem('demo_stores');
+        const allStores = storedStores ? JSON.parse(storedStores) : [];
+        allStores.push(newStore);
+        localStorage.setItem('demo_stores', JSON.stringify(allStores));
+        
+        setStores(prev => [newStore, ...prev]);
+        
+        toast({
+          title: "Success",
+          description: "Store added successfully (Demo Mode)",
+        });
+
+        return newStore;
+      }
+
       const { data, error } = await supabase
         .from('stores')
         .insert({
