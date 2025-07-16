@@ -63,10 +63,11 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
 
       if (authError) {
         // If login fails, try to sign up the user
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        const { data: newUserData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
+            emailRedirectTo: `${window.location.origin}/`,
             data: {
               username,
               name: username,
@@ -77,12 +78,12 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
 
         if (signUpError) throw signUpError;
 
-        if (signUpData.user) {
+        if (newUserData.user) {
           // Create user profile
           const { error: profileError } = await supabase
             .from('users')
             .upsert({
-              id: signUpData.user.id,
+              id: newUserData.user.id,
               username,
               name: username,
               role,
@@ -103,7 +104,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
       }
 
       // Get user profile
-      const currentUser = authData?.user || signUpData?.user;
+      const currentUser = authData?.user || newUserData?.user;
       if (currentUser) {
         const { data: profile } = await supabase
           .from('users')
