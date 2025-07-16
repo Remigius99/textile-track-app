@@ -61,9 +61,11 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
         password,
       });
 
+      let newUserData: any = null;
+
       if (authError) {
         // If login fails, try to sign up the user
-        const { data: newUserData, error: signUpError } = await supabase.auth.signUp({
+        const signUpResult = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -76,7 +78,8 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
           }
         });
 
-        if (signUpError) throw signUpError;
+        if (signUpResult.error) throw signUpResult.error;
+        newUserData = signUpResult.data;
 
         if (newUserData.user) {
           // Create user profile
