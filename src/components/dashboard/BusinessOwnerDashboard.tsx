@@ -23,50 +23,67 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
 
   const totalProducts = products.reduce((sum, product) => sum + product.quantity, 0);
   const lowStockProducts = products.filter(product => product.quantity < 10).length;
+  const uniqueProductTypes = products.length;
 
   const handleViewInventory = (storeId: string) => {
     setSelectedStoreId(storeId);
     setActiveTab("products");
   };
 
+  const handleCardClick = (tab: string) => {
+    setActiveTab(tab);
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Overview Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-        <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+        <Card 
+          className="bg-white/10 backdrop-blur-sm border-white/20 cursor-pointer hover:bg-white/15 transition-colors"
+          onClick={() => handleCardClick("stores")}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
             <CardTitle className="text-xs sm:text-sm font-medium text-white">Total Stores</CardTitle>
             <Building className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
             <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">{stores.length}</div>
-            <p className="text-xs text-blue-200">Active warehouses & stores</p>
+            <p className="text-xs text-blue-200">Click to manage stores</p>
           </CardContent>
         </Card>
         
-        <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+        <Card 
+          className="bg-white/10 backdrop-blur-sm border-white/20 cursor-pointer hover:bg-white/15 transition-colors"
+          onClick={() => handleCardClick("products")}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
-            <CardTitle className="text-xs sm:text-sm font-medium text-white">Total Products</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium text-white">Total Items</CardTitle>
             <Package className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
             <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">{totalProducts}</div>
-            <p className="text-xs text-blue-200">Items in inventory</p>
+            <p className="text-xs text-blue-200">Click to view inventory</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+        <Card 
+          className="bg-white/10 backdrop-blur-sm border-white/20 cursor-pointer hover:bg-white/15 transition-colors"
+          onClick={() => handleCardClick("products")}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
             <CardTitle className="text-xs sm:text-sm font-medium text-white">Product Types</CardTitle>
             <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">{products.length}</div>
-            <p className="text-xs text-blue-200">Unique products</p>
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">{uniqueProductTypes}</div>
+            <p className="text-xs text-blue-200">Click to view products</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+        <Card 
+          className="bg-white/10 backdrop-blur-sm border-white/20 cursor-pointer hover:bg-white/15 transition-colors"
+          onClick={() => handleCardClick("products")}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
             <CardTitle className="text-xs sm:text-sm font-medium text-white">Low Stock</CardTitle>
             <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400" />

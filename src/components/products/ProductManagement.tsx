@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Plus, Search, Edit, Minus } from "lucide-react";
+import { Package, Plus, Search, Edit, Minus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useProducts } from "@/hooks/useProducts";
 import { useStores } from "@/hooks/useStores";
 import { User } from "@/types/user";
@@ -67,7 +68,6 @@ const ProductManagement = ({ user, selectedStoreId }: ProductManagementProps) =>
       console.log('Product added successfully');
     } catch (error) {
       console.error('Failed to add product:', error);
-      // Error is handled in the hook
     } finally {
       setIsSubmitting(false);
     }
@@ -83,7 +83,16 @@ const ProductManagement = ({ user, selectedStoreId }: ProductManagementProps) =>
       await updateProductQuantity(productId, newQuantity);
     } catch (error) {
       console.error('Failed to update quantity:', error);
-      // Error is handled in the hook
+    }
+  };
+
+  const handleRemoveProduct = async (productId: string) => {
+    try {
+      // Set quantity to 0 to effectively remove the product
+      await updateProductQuantity(productId, 0);
+      console.log('Product removed successfully');
+    } catch (error) {
+      console.error('Failed to remove product:', error);
     }
   };
 
@@ -144,7 +153,7 @@ const ProductManagement = ({ user, selectedStoreId }: ProductManagementProps) =>
                     value={newProduct.name}
                     onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
                     className="bg-white/10 border-white/20 text-white mt-1 h-9"
-                    placeholder="e.g., Silk"
+                    placeholder="e.g., Silk Fabric"
                     required
                   />
                 </div>
@@ -331,13 +340,45 @@ const ProductManagement = ({ user, selectedStoreId }: ProductManagementProps) =>
                       <Plus className="w-3 h-3" />
                     </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="bg-white/10 border-white/20 text-white hover:bg-white/20 h-7 w-7 sm:h-8 sm:w-8 p-0"
-                  >
-                    <Edit className="w-3 h-3" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20 h-7 w-7 sm:h-8 sm:w-8 p-0"
+                    >
+                      <Edit className="w-3 h-3" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="bg-red-600/20 border-red-400/20 text-red-400 hover:bg-red-600/30 h-7 w-7 sm:h-8 sm:w-8 p-0"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-slate-900 border-slate-700">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-white">Remove Product</AlertDialogTitle>
+                          <AlertDialogDescription className="text-blue-200">
+                            Are you sure you want to remove "{product.name}"? This will set its quantity to 0.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => handleRemoveProduct(product.id)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Remove
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
               </CardContent>
             </Card>
