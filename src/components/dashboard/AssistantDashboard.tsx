@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Package, Activity, Search, Minus, Eye } from "lucide-react";
 import { User } from "@/types/user";
 import { useProducts } from "@/hooks/useProducts";
+import { useActivities } from "@/hooks/useActivities";
 
 interface AssistantDashboardProps {
   user: User;
@@ -18,26 +19,7 @@ interface AssistantDashboardProps {
 const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboardProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const { products, loading: productsLoading } = useProducts(user.id);
-
-  // Mock data for activities - in real app, this would come from the database
-  const [activities] = useState([
-    {
-      id: "1",
-      action: "Product removed",
-      productName: "Silk Fabric",
-      quantity: 10,
-      timestamp: new Date(Date.now() - 3600000),
-      storeName: "Store A at NMB Branch"
-    },
-    {
-      id: "2",
-      action: "Product removed",
-      productName: "Canvas Material",
-      quantity: 5,
-      timestamp: new Date(Date.now() - 7200000),
-      storeName: "Store A at NMB Branch"
-    }
-  ]);
+  const { activities, loading: activitiesLoading } = useActivities(user.id);
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -47,7 +29,7 @@ const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboar
 
   // Calculate dynamic metrics based on real data
   const availableProducts = productsLoading ? 0 : products.length;
-  const todaysActivities = activities.filter(activity => 
+  const todaysActivities = activitiesLoading ? 0 : activities.filter(activity => 
     new Date(activity.timestamp).toDateString() === new Date().toDateString()
   ).length;
 
@@ -79,7 +61,9 @@ const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboar
             <Activity className="h-4 w-4 text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{todaysActivities}</div>
+            <div className="text-2xl font-bold text-white">
+              {activitiesLoading ? "..." : todaysActivities}
+            </div>
             <p className="text-xs text-blue-200">Actions performed today</p>
           </CardContent>
         </Card>
@@ -106,7 +90,7 @@ const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboar
             Products ({productsLoading ? "..." : availableProducts})
           </TabsTrigger>
           <TabsTrigger value="activity" className="data-[state=active]:bg-blue-600">
-            My Activity ({activities.length})
+            My Activity ({activitiesLoading ? "..." : activities.length})
           </TabsTrigger>
         </TabsList>
 
@@ -126,11 +110,11 @@ const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboar
                       <div>
                         <span className="text-white">{activity.action}</span>
                         <p className="text-blue-200 text-sm">
-                          {activity.productName} ({activity.quantity} units)
+                          {activity.details?.product_name || 'Unknown Product'} ({Math.abs(activity.quantity_change || 0)} units)
                         </p>
                       </div>
                       <span className="text-blue-200 text-sm">
-                        {activity.timestamp.toLocaleTimeString()}
+                        {new Date(activity.timestamp).toLocaleTimeString()}
                       </span>
                     </div>
                   ))}
@@ -248,17 +232,19 @@ const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboar
                               {activity.action}
                             </Badge>
                           </div>
-                          <p className="text-white font-medium">{activity.productName}</p>
+                          <p className="text-white font-medium">
+                            {activity.details?.product_name || 'Unknown Product'}
+                          </p>
                           <p className="text-blue-200 text-sm">
-                            Quantity: {activity.quantity} units | Store: {activity.storeName}
+                            Quantity: {Math.abs(activity.quantity_change || 0)} units | Store: {activity.store_id}
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="text-blue-200 text-sm">
-                            {activity.timestamp.toLocaleDateString()}
+                            {new Date(activity.timestamp).toLocaleDateString()}
                           </p>
                           <p className="text-blue-300 text-xs">
-                            {activity.timestamp.toLocaleTimeString()}
+                            {new Date(activity.timestamp).toLocaleTimeString()}
                           </p>
                         </div>
                       </div>

@@ -112,7 +112,10 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
             <Users className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">0</div>
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">
+              {/* This will be updated when we implement assistant fetching */}
+              0
+            </div>
             <p className="text-xs text-blue-200">Click to manage</p>
           </CardContent>
         </Card>
@@ -131,7 +134,7 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
             Products ({productsLoading ? "..." : uniqueProductTypes})
           </TabsTrigger>
           <TabsTrigger value="assistants" className="data-[state=active]:bg-blue-600 text-xs sm:text-sm">
-            Assistants
+            Assistants (0)
           </TabsTrigger>
           <TabsTrigger value="activities" className="data-[state=active]:bg-blue-600 text-xs sm:text-sm">
             Activities
