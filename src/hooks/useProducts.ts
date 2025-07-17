@@ -10,6 +10,45 @@ export const useProducts = (userId: string, storeId?: string) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  const logActivity = async (action: string, productData: Product, quantityChange?: number, previousQuantity?: number) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log('No authenticated user, skipping activity log');
+        return;
+      }
+
+      const activityData = {
+        user_id: user.id,
+        action,
+        product_id: productData.id,
+        store_id: productData.storeId,
+        quantity_change: quantityChange || null,
+        previous_quantity: previousQuantity || null,
+        new_quantity: productData.quantity,
+        details: {
+          product_name: productData.name,
+          color: productData.color,
+          category: productData.category,
+          form: productData.form
+        }
+      };
+
+      const { error } = await supabase
+        .from('activity_logs')
+        .insert(activityData);
+
+      if (error) {
+        console.error('Error logging activity:', error);
+      } else {
+        console.log('Activity logged successfully:', action);
+      }
+    } catch (error) {
+      console.error('Error in logActivity:', error);
+    }
+  };
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -150,6 +189,9 @@ export const useProducts = (userId: string, storeId?: string) => {
 
       setProducts(prev => [newProduct, ...prev]);
       
+      // Log the activity
+      await logActivity('Product added', newProduct, newProduct.quantity, 0);
+      
       toast({
         title: "Success",
         description: "Product added successfully",
@@ -170,6 +212,15 @@ export const useProducts = (userId: string, storeId?: string) => {
   const updateProductQuantity = async (productId: string, newQuantity: number) => {
     try {
       console.log('Updating product quantity:', productId, 'to:', newQuantity);
+      
+      const currentProduct = products.find(p => p.id === productId);
+      if (!currentProduct) {
+        console.error('Product not found');
+        return;
+      }
+
+      const previousQuantity = currentProduct.quantity;
+      const quantityChange = newQuantity - previousQuantity;
       
       // Check if user has Supabase auth
       const { data: { user } } = await supabase.auth.getUser();
@@ -216,11 +267,25 @@ export const useProducts = (userId: string, storeId?: string) => {
 
       console.log('Product quantity updated in database:', data);
 
+      const updatedProduct = {
+        ...currentProduct,
+        quantity: newQuantity,
+        lastUpdated: new Date(data.updated_at || Date.now())
+      };
+
       setProducts(prev => prev.map(product => 
-        product.id === productId 
-          ? { ...product, quantity: newQuantity, lastUpdated: new Date(data.updated_at || Date.now()) }
-          : product
+        product.id === productId ? updatedProduct : product
       ));
+
+      // Log the activity with appropriate action
+      let action = 'Product quantity updated';
+      if (quantityChange > 0) {
+        action = 'Product restocked';
+      } else if (quantityChange < 0) {
+        action = 'Product removed';
+      }
+
+      await logActivity(action, updatedProduct, quantityChange, previousQuantity);
 
       toast({
         title: "Success",
@@ -231,6 +296,71 @@ export const useProducts = (userId: string, storeId?: string) => {
       toast({
         title: "Error",
         description: "Failed to update product quantity",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const deleteProduct = async (productId: string) => {
+    try {
+      console.log('Deleting product:', productId);
+      
+      const productToDelete = products.find(p => p.id === productId);
+      if (!productToDelete) {
+        console.error('Product not found');
+        return;
+      }
+      
+      // Check if user has Supabase auth
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log('Deleting product in demo mode');
+        // Demo mode - use localStorage
+        const storedProducts = localStorage.getItem('demo_products');
+        if (storedProducts) {
+          const allProducts = JSON.parse(storedProducts);
+          const updatedProducts = allProducts.filter((p: Product) => p.id !== productId);
+          localStorage.setItem('demo_products', JSON.stringify(updatedProducts));
+          
+          setProducts(prev => prev.filter(product => product.id !== productId));
+
+          toast({
+            title: "Success",
+            description: "Product deleted successfully (Demo Mode)",
+          });
+        }
+        return;
+      }
+
+      console.log('Deleting product from database');
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) {
+        console.error('Database delete error:', error);
+        throw error;
+      }
+
+      console.log('Product deleted from database');
+
+      setProducts(prev => prev.filter(product => product.id !== productId));
+      
+      // Log the activity
+      await logActivity('Product deleted', productToDelete, -productToDelete.quantity, productToDelete.quantity);
+
+      toast({
+        title: "Success",
+        description: "Product deleted successfully",
+      });
+    } catch (error: any) {
+      console.error('Error deleting product:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete product",
         variant: "destructive",
       });
       throw error;
@@ -249,6 +379,7 @@ export const useProducts = (userId: string, storeId?: string) => {
     loading,
     addProduct,
     updateProductQuantity,
+    deleteProduct,
     refetch: fetchProducts
   };
 };

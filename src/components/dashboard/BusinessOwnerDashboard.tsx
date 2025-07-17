@@ -2,10 +2,12 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building, Package, Users, BarChart3, FileText } from "lucide-react";
+import { Building, Package, Users, BarChart3, FileText, AlertTriangle, History } from "lucide-react";
 import StoreManagement from "@/components/stores/StoreManagement";
 import ProductManagement from "@/components/products/ProductManagement";
 import AssistantManagement from "@/components/assistants/AssistantManagement";
+import ActivityHistory from "@/components/activities/ActivityHistory";
+import LowStockAlert from "@/components/products/LowStockAlert";
 import { User } from "@/types/user";
 import { useStores } from "@/hooks/useStores";
 import { useProducts } from "@/hooks/useProducts";
@@ -21,9 +23,12 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
   const { stores } = useStores(user.id);
   const { products } = useProducts(user.id);
 
+  // Calculate dynamic metrics
   const totalProducts = products.reduce((sum, product) => sum + product.quantity, 0);
   const lowStockProducts = products.filter(product => product.quantity < 10).length;
+  const outOfStockProducts = products.filter(product => product.quantity === 0).length;
   const uniqueProductTypes = products.length;
+  const activeStores = stores.filter(store => store.isActive).length;
 
   const handleViewInventory = (storeId: string) => {
     setSelectedStoreId(storeId);
@@ -32,6 +37,11 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
 
   const handleCardClick = (tab: string) => {
     setActiveTab(tab);
+  };
+
+  const handleProductSelect = (productId: string) => {
+    setActiveTab("products");
+    // You could implement scrolling to specific product here
   };
 
   return (
@@ -43,12 +53,12 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
           onClick={() => handleCardClick("stores")}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
-            <CardTitle className="text-xs sm:text-sm font-medium text-white">Total Stores</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium text-white">Active Stores</CardTitle>
             <Building className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">{stores.length}</div>
-            <p className="text-xs text-blue-200">Click to manage stores</p>
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">{activeStores}</div>
+            <p className="text-xs text-blue-200">of {stores.length} total stores</p>
           </CardContent>
         </Card>
         
@@ -62,21 +72,7 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
             <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">{totalProducts}</div>
-            <p className="text-xs text-blue-200">Click to view inventory</p>
-          </CardContent>
-        </Card>
-
-        <Card 
-          className="bg-white/10 backdrop-blur-sm border-white/20 cursor-pointer hover:bg-white/15 transition-colors"
-          onClick={() => handleCardClick("products")}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
-            <CardTitle className="text-xs sm:text-sm font-medium text-white">Product Types</CardTitle>
-            <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4 pt-0">
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">{uniqueProductTypes}</div>
-            <p className="text-xs text-blue-200">Click to view products</p>
+            <p className="text-xs text-blue-200">{uniqueProductTypes} product types</p>
           </CardContent>
         </Card>
 
@@ -86,18 +82,32 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
             <CardTitle className="text-xs sm:text-sm font-medium text-white">Low Stock</CardTitle>
-            <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400" />
+            <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400" />
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
             <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">{lowStockProducts}</div>
-            <p className="text-xs text-blue-200">Items need restocking</p>
+            <p className="text-xs text-blue-200">{outOfStockProducts} out of stock</p>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="bg-white/10 backdrop-blur-sm border-white/20 cursor-pointer hover:bg-white/15 transition-colors"
+          onClick={() => handleCardClick("assistants")}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium text-white">Assistants</CardTitle>
+            <Users className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />
+          </CardHeader>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">0</div>
+            <p className="text-xs text-blue-200">Click to manage</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-        <TabsList className="grid w-full grid-cols-4 bg-white/10 border-white/20 h-9 sm:h-10">
+        <TabsList className="grid w-full grid-cols-5 bg-white/10 border-white/20 h-9 sm:h-10">
           <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600 text-xs sm:text-sm">
             Overview
           </TabsTrigger>
@@ -110,30 +120,17 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
           <TabsTrigger value="assistants" className="data-[state=active]:bg-blue-600 text-xs sm:text-sm">
             Assistants
           </TabsTrigger>
+          <TabsTrigger value="activities" className="data-[state=active]:bg-blue-600 text-xs sm:text-sm">
+            Activities
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 sm:space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-              <CardHeader className="p-3 sm:p-4 md:p-6">
-                <CardTitle className="text-white text-base sm:text-lg">Recent Activity</CardTitle>
-                <CardDescription className="text-blue-200 text-sm">
-                  Latest inventory movements
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white text-sm">System initialized</span>
-                    <span className="text-blue-200 text-xs">Just now</span>
-                  </div>
-                  <div className="text-blue-200 text-xs sm:text-sm">
-                    Start managing your inventory by adding stores and products.
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Low Stock Alert */}
+            <LowStockAlert user={user} onProductSelect={handleProductSelect} />
 
+            {/* Quick Actions */}
             <Card className="bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader className="p-3 sm:p-4 md:p-6">
                 <CardTitle className="text-white text-base sm:text-lg">Quick Actions</CardTitle>
@@ -163,6 +160,13 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
                   <Users className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
                   Manage Assistants
                 </button>
+                <button
+                  onClick={() => setActiveTab("activities")}
+                  className="w-full text-left p-2 sm:p-3 rounded-lg bg-orange-600/20 hover:bg-orange-600/30 text-white transition-colors text-sm"
+                >
+                  <History className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
+                  View Activity History
+                </button>
               </CardContent>
             </Card>
           </div>
@@ -178,6 +182,10 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
 
         <TabsContent value="assistants">
           <AssistantManagement user={user} />
+        </TabsContent>
+
+        <TabsContent value="activities">
+          <ActivityHistory user={user} />
         </TabsContent>
       </Tabs>
     </div>
