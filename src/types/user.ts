@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   username: string;
@@ -17,6 +16,7 @@ export interface Store {
   location: string;
   description: string;
   ownerId: string;
+  isActive: boolean;
 }
 
 export interface Product {

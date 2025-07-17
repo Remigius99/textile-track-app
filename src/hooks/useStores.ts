@@ -34,14 +34,16 @@ export const useStores = (userId: string) => {
               name: 'Store A - NMB Branch',
               location: 'Near NMB Bank, Kariakoo',
               description: 'Main textile store with premium fabrics',
-              ownerId: userId
+              ownerId: userId,
+              isActive: true
             },
             {
               id: 'demo-store-2', 
               name: 'Store B - Msimbazi',
               location: 'Msimbazi Street, Kariakoo',
               description: 'Cotton and silk specialty store',
-              ownerId: userId
+              ownerId: userId,
+              isActive: true
             }
           ];
           localStorage.setItem('demo_stores', JSON.stringify(demoStores));
@@ -55,7 +57,6 @@ export const useStores = (userId: string) => {
         .from('stores')
         .select('*')
         .eq('owner_id', userId)
-        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -70,7 +71,8 @@ export const useStores = (userId: string) => {
         name: store.name,
         location: store.location,
         description: store.description || '',
-        ownerId: store.owner_id
+        ownerId: store.owner_id,
+        isActive: store.is_active ?? true
       }));
 
       setStores(mappedStores);
@@ -99,7 +101,8 @@ export const useStores = (userId: string) => {
         const newStore: Store = {
           id: `demo-store-${Date.now()}`,
           ...storeData,
-          ownerId: userId
+          ownerId: userId,
+          isActive: storeData.isActive ?? true
         };
 
         const storedStores = localStorage.getItem('demo_stores');
@@ -124,7 +127,8 @@ export const useStores = (userId: string) => {
           name: storeData.name,
           location: storeData.location,
           description: storeData.description,
-          owner_id: userId
+          owner_id: userId,
+          is_active: storeData.isActive ?? true
         })
         .select()
         .single();
@@ -141,7 +145,8 @@ export const useStores = (userId: string) => {
         name: data.name,
         location: data.location,
         description: data.description || '',
-        ownerId: data.owner_id
+        ownerId: data.owner_id,
+        isActive: data.is_active ?? true
       };
 
       setStores(prev => [newStore, ...prev]);
