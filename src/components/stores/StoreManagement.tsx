@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,7 +39,10 @@ const StoreManagement = ({ user, onStoreSelect }: StoreManagementProps) => {
     setIsSubmitting(true);
     try {
       console.log('Submitting new store:', newStore);
-      await addStore(newStore);
+      await addStore({
+        ...newStore,
+        isActive: true
+      });
       setNewStore({ name: "", location: "", description: "" });
       setShowAddStore(false);
       console.log('Store added successfully');
