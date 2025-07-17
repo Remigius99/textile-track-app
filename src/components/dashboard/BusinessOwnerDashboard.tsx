@@ -20,15 +20,16 @@ interface BusinessOwnerDashboardProps {
 
 const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwnerDashboardProps) => {
   const [selectedStoreId, setSelectedStoreId] = useState<string | undefined>();
-  const { stores } = useStores(user.id);
-  const { products } = useProducts(user.id);
+  const { stores, loading: storesLoading } = useStores(user.id);
+  const { products, loading: productsLoading } = useProducts(user.id);
 
-  // Calculate dynamic metrics
-  const totalProducts = products.reduce((sum, product) => sum + product.quantity, 0);
-  const lowStockProducts = products.filter(product => product.quantity < 10).length;
-  const outOfStockProducts = products.filter(product => product.quantity === 0).length;
-  const uniqueProductTypes = products.length;
-  const activeStores = stores.filter(store => store.isActive).length;
+  // Calculate dynamic metrics - ensure we have data before calculating
+  const totalProducts = productsLoading ? 0 : products.reduce((sum, product) => sum + product.quantity, 0);
+  const lowStockProducts = productsLoading ? 0 : products.filter(product => product.quantity < 10).length;
+  const outOfStockProducts = productsLoading ? 0 : products.filter(product => product.quantity === 0).length;
+  const uniqueProductTypes = productsLoading ? 0 : products.length;
+  const activeStores = storesLoading ? 0 : stores.filter(store => store.isActive).length;
+  const totalStores = storesLoading ? 0 : stores.length;
 
   const handleViewInventory = (storeId: string) => {
     setSelectedStoreId(storeId);
@@ -57,8 +58,12 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
             <Building className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">{activeStores}</div>
-            <p className="text-xs text-blue-200">of {stores.length} total stores</p>
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">
+              {storesLoading ? "..." : activeStores}
+            </div>
+            <p className="text-xs text-blue-200">
+              of {storesLoading ? "..." : totalStores} total stores
+            </p>
           </CardContent>
         </Card>
         
@@ -71,8 +76,12 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
             <Package className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">{totalProducts}</div>
-            <p className="text-xs text-blue-200">{uniqueProductTypes} product types</p>
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">
+              {productsLoading ? "..." : totalProducts}
+            </div>
+            <p className="text-xs text-blue-200">
+              {productsLoading ? "..." : uniqueProductTypes} product types
+            </p>
           </CardContent>
         </Card>
 
@@ -85,8 +94,12 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
             <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400" />
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">{lowStockProducts}</div>
-            <p className="text-xs text-blue-200">{outOfStockProducts} out of stock</p>
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white">
+              {productsLoading ? "..." : lowStockProducts}
+            </div>
+            <p className="text-xs text-blue-200">
+              {productsLoading ? "..." : outOfStockProducts} out of stock
+            </p>
           </CardContent>
         </Card>
 
@@ -112,10 +125,10 @@ const BusinessOwnerDashboard = ({ user, activeTab, setActiveTab }: BusinessOwner
             Overview
           </TabsTrigger>
           <TabsTrigger value="stores" className="data-[state=active]:bg-blue-600 text-xs sm:text-sm">
-            Stores
+            Stores ({storesLoading ? "..." : totalStores})
           </TabsTrigger>
           <TabsTrigger value="products" className="data-[state=active]:bg-blue-600 text-xs sm:text-sm">
-            Products
+            Products ({productsLoading ? "..." : uniqueProductTypes})
           </TabsTrigger>
           <TabsTrigger value="assistants" className="data-[state=active]:bg-blue-600 text-xs sm:text-sm">
             Assistants

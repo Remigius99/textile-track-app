@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,6 +77,12 @@ const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboar
     product.storeName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Calculate dynamic metrics
+  const availableProducts = products.length;
+  const todaysActivities = activities.filter(activity => 
+    new Date(activity.timestamp).toDateString() === new Date().toDateString()
+  ).length;
+
   const handleRemoveProduct = (productId: string, quantity: number) => {
     console.log(`Removing ${quantity} of product ${productId}`);
     // In real implementation, this would update the database
@@ -92,7 +98,7 @@ const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboar
             <Package className="h-4 w-4 text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{products.length}</div>
+            <div className="text-2xl font-bold text-white">{availableProducts}</div>
             <p className="text-xs text-blue-200">Products you can manage</p>
           </CardContent>
         </Card>
@@ -103,11 +109,7 @@ const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboar
             <Activity className="h-4 w-4 text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">
-              {activities.filter(a => 
-                new Date(a.timestamp).toDateString() === new Date().toDateString()
-              ).length}
-            </div>
+            <div className="text-2xl font-bold text-white">{todaysActivities}</div>
             <p className="text-xs text-blue-200">Actions performed today</p>
           </CardContent>
         </Card>
@@ -131,10 +133,10 @@ const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboar
             Overview
           </TabsTrigger>
           <TabsTrigger value="products" className="data-[state=active]:bg-blue-600">
-            Products
+            Products ({availableProducts})
           </TabsTrigger>
           <TabsTrigger value="activity" className="data-[state=active]:bg-blue-600">
-            My Activity
+            My Activity ({activities.length})
           </TabsTrigger>
         </TabsList>
 

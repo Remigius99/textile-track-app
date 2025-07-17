@@ -13,7 +13,7 @@ interface AdminDashboardProps {
 }
 
 const AdminDashboard = ({ user, activeTab, setActiveTab }: AdminDashboardProps) => {
-  // Mock data for demonstration
+  // Mock data for demonstration - in real app, this would come from actual database queries
   const [businessRegistrations] = useState([
     {
       id: "1",
@@ -39,6 +39,8 @@ const AdminDashboard = ({ user, activeTab, setActiveTab }: AdminDashboardProps) 
 
   const pendingRegistrations = businessRegistrations.filter(reg => reg.status === "pending");
   const approvedBusinesses = businessRegistrations.filter(reg => reg.status === "approved");
+  const totalUsers = 26; // This would come from actual database query
+  const activeBusinessOwners = 24; // This would come from actual database query
 
   const handleApproveRegistration = (id: string) => {
     console.log("Approving registration:", id);
@@ -73,8 +75,8 @@ const AdminDashboard = ({ user, activeTab, setActiveTab }: AdminDashboardProps) 
             <Users className="h-4 w-4 text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">24</div>
-            <p className="text-xs text-blue-200">Active business owners</p>
+            <div className="text-2xl font-bold text-white">{totalUsers}</div>
+            <p className="text-xs text-blue-200">{activeBusinessOwners} active business owners</p>
           </CardContent>
         </Card>
         
@@ -119,10 +121,10 @@ const AdminDashboard = ({ user, activeTab, setActiveTab }: AdminDashboardProps) 
             Overview
           </TabsTrigger>
           <TabsTrigger value="registrations" className="data-[state=active]:bg-blue-600">
-            Registrations
+            Registrations ({pendingRegistrations.length})
           </TabsTrigger>
           <TabsTrigger value="users" className="data-[state=active]:bg-blue-600">
-            Users
+            Users ({totalUsers})
           </TabsTrigger>
         </TabsList>
 
