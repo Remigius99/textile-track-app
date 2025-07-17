@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Package, Activity, Search, Minus, Eye } from "lucide-react";
 import { User } from "@/types/user";
+import { useProducts } from "@/hooks/useProducts";
 
 interface AssistantDashboardProps {
   user: User;
@@ -16,41 +17,9 @@ interface AssistantDashboardProps {
 
 const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboardProps) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { products, loading: productsLoading } = useProducts(user.id);
 
-  // Mock data for demonstration - in real app, this would come from the database
-  const [products] = useState([
-    {
-      id: "1",
-      name: "Silk Fabric",
-      color: "Black",
-      category: "Cotton",
-      form: "meters",
-      quantity: 150,
-      storeId: "store1",
-      storeName: "Store A at NMB Branch"
-    },
-    {
-      id: "2",
-      name: "Canvas Material",
-      color: "White",
-      category: "Canvas",
-      form: "boxes",
-      quantity: 25,
-      storeId: "store1",
-      storeName: "Store A at NMB Branch"
-    },
-    {
-      id: "3",
-      name: "Tetron Fabric",
-      color: "Blue",
-      category: "Synthetic",
-      form: "rolls",
-      quantity: 75,
-      storeId: "store2",
-      storeName: "Store B at Msimbazi"
-    }
-  ]);
-
+  // Mock data for activities - in real app, this would come from the database
   const [activities] = useState([
     {
       id: "1",
@@ -73,12 +42,11 @@ const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboar
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.color.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.storeName.toLowerCase().includes(searchTerm.toLowerCase())
+    product.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Calculate dynamic metrics
-  const availableProducts = products.length;
+  // Calculate dynamic metrics based on real data
+  const availableProducts = productsLoading ? 0 : products.length;
   const todaysActivities = activities.filter(activity => 
     new Date(activity.timestamp).toDateString() === new Date().toDateString()
   ).length;
@@ -98,7 +66,9 @@ const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboar
             <Package className="h-4 w-4 text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{availableProducts}</div>
+            <div className="text-2xl font-bold text-white">
+              {productsLoading ? "..." : availableProducts}
+            </div>
             <p className="text-xs text-blue-200">Products you can manage</p>
           </CardContent>
         </Card>
@@ -133,7 +103,7 @@ const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboar
             Overview
           </TabsTrigger>
           <TabsTrigger value="products" className="data-[state=active]:bg-blue-600">
-            Products ({availableProducts})
+            Products ({productsLoading ? "..." : availableProducts})
           </TabsTrigger>
           <TabsTrigger value="activity" className="data-[state=active]:bg-blue-600">
             My Activity ({activities.length})
@@ -221,7 +191,7 @@ const AssistantDashboard = ({ user, activeTab, setActiveTab }: AssistantDashboar
                       </Badge>
                     </div>
                     <CardDescription className="text-blue-200">
-                      {product.storeName}
+                      Store: {product.storeId}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
